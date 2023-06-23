@@ -1,1 +1,1 @@
-# career-pathfinder
+# career-pathways
