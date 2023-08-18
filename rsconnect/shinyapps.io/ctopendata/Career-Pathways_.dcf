@@ -1,0 +1,13 @@
+name: Career-Pathways_
+title: Career-Pathways_
+username:
+account: ctopendata
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9451488
+bundleId: 7452699
+url: https://ctopendata.shinyapps.io/Career-Pathways_/
+when: 1689256599.368
+lastSyncTime: 1689256599.36802
+asMultiple: FALSE
+asStatic: FALSE
