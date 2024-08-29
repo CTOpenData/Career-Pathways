@@ -47,18 +47,18 @@ panel_div <- function(class_type, content) {
 
 shinyUI(
   navbarPage(
-    title = img(src="CT_LOGO_white.png", height = "40px"), id = "navBar",
+    title = img(src="AR_logo.svg", height = "40px"), id = "navBar",
     theme = theme,
     collapsible = TRUE,
     inverse = TRUE,
-    windowTitle = "Connecticut Career Pathways",
+    windowTitle = "Arkansas Education and Workforce Pathways",
     position = "fixed-top",
     #footer = includeHTML("./www/include_footer.html"),
     header = tags$style(
     ".navbar-right {
     float: right !important;
     }",
-    "body {padding-top: 55px;}"),
+    "body {padding-top: 35px;}"),
     
     tabPanel("HOME", value = "home",
              shinyjs::useShinyjs(),
@@ -74,15 +74,16 @@ shinyUI(
              };
                                         '))),
              fluidRow(
-               style = "background-color:#054266; padding-bottom:20px; color:white;",
-               shiny::HTML("<center> <h1>Discover Your Career Pathway</h1></center>")
+               style = "background-color:#347fc4; padding-bottom:10px;padding-top:10px; color:white;",
+               shiny::HTML("<center> <h1>Discover Your Arkansas Pathway</h1></center>")
                ),
              # WHAT
-             fluidRow(column(3),
+             fluidRow(
+                 column(3),
                       column(6,
                              shiny::HTML("<br><br><center> <h2>What you'll find here</h2> </center><br>"),
-                              shiny::HTML("<h5>An interactive tool to help you explore the actual paths Connecticut's 
-                                               workforce have taken during their careers. With information about the
+                              shiny::HTML("<h5>An interactive tool to help you explore the actual paths Arkansas 
+                                               residents have taken during their education and workforce training. With information about the
                                                popularity of certain paths, employment outcomes, wage growth, and more, you can
                                                build your own path based on what is meaningful to you.</h5>")
                              ),
@@ -96,13 +97,14 @@ shinyUI(
              tags$hr(),
              
              # HOW
-             fluidRow(column(3),
+             fluidRow(
+                 column(3),
                       column(6,
                              shiny::HTML("<br><br><center> <h2>How it can help you</h2> </center><br>"),
                              shiny::HTML("<h5>With most things, the more you know, the better your decisions 
-                                              will be. Connecticut Career Pathways empowers you to make better decisions 
+                                              will be. Arkansas Pathways empowers you to make better decisions 
                                               about your career and education by providing transparant information on workforce
-                                              training and education programs outcomes.</h5>")
+                                              training and education program outcomes.</h5>")
                              ),
                       column(3)
                       ),
@@ -120,7 +122,7 @@ shinyUI(
                column(6,
                       shiny::HTML("<br><br><center> <h2>Where it came from</h2> </center><br>"),
                       shiny::HTML("<h5>Our team analyzed the workforce and education pathways of
-                                       Connecticut residents over the past 11 years.</h5>")
+                                       Arkansas residents over the past 8 years.</h5>")
                       ),
                column(3)
                ),
@@ -171,7 +173,7 @@ shinyUI(
                               div(
                                 h5(
                                 "Then from that program, review the set of next programs that people have moved 
-                                 into during their careers. Review information about these choices and select your next career step."
+                                 into during their careers. Review information about these choices and select your next step."
                                 )
                                 )
                               )
@@ -185,7 +187,7 @@ shinyUI(
                                 tags$img(src = "three.svg",
                                          width = "50px", height = "50px")),
                               div(h5(
-                                "Plan up to five steps out in your career. When you're ready, you may save or print out your personalized report."
+                                "Plan up to five steps out in your pathway. When you're ready, you may save or print out your personalized report."
                                 )
                                 )
                               )
@@ -207,9 +209,7 @@ shinyUI(
                       shiny::HTML("<br><br><center> <h2>How does it fit in the big picture?</h2> </center><br>"),
                       shiny::HTML("<h5>Building a career path is just one part of effective career 
                                        planning and development. You should also establish a career plan 
-                                       to outline <i>how</i> you will achieve your professional goals. Our
-                                       Career Planning Guide provides information to help you establish 
-                                       a plan for making your career path a reality.</h5>")
+                                       to outline <i>how</i> you will achieve your professional goals.</h5>")
                       ),
                column(3)
                ),
@@ -218,7 +218,8 @@ shinyUI(
              
              # PAGE BREAK
              tags$hr(),
-             fluidRow(
+            
+            fluidRow(
              shiny::HTML("<br><br><center> <h2>Ready to Get Started?</h2> </center>
                          <br>"
                          )
@@ -234,11 +235,14 @@ shinyUI(
                       ),
                column(3)
                ),
-             fluidRow(style = "height:25px;"
+             fluidRow(style = "height:10px;"
                       )
              ), # Closes the first tabPanel called "Home"
     
-    tabPanel("CAREER PATHWAYS", value = "careerPF",
+    tabPanel("ARKANSAS PATHWAYS", value = "careerPF",
+             fluidRow(
+                 style = "padding-top:20px;"
+             ),
              sidebarLayout( 
                sidebarPanel(width = 3,
                             introjsUI(),
@@ -251,19 +255,19 @@ shinyUI(
                               style = "height:50px;",
                               introBox(
                                 tags$div(
-                                  style = "height:50px;",
+                                  style = "height:75px;",
                                   actionLink("settings", "Settings",
                                              icon = icon("sliders", class = "fa-2x"))),
                                 data.step = 6,
-                                data.intro = "Settings is where you can set options that affect the graph and career statistics."
+                                data.intro = "Settings is where you can set options that affect the graph."
                                 ),
-                              radioButtons("selectData", 
-                                           label = "How many years of data do you want to include?",
-                                           choices = c("30 Years",
-                                                       "15 Years"),
-                                           inline = TRUE,
-                                           width = "100%"
-                              ),
+                             # radioButtons("selectData", 
+                             #              label = "How many years of data do you want to include?",
+                             #              choices = c("30 Years",
+                             #                          "15 Years"),
+                             #              inline = TRUE,
+                             #              width = "100%"
+                             # ),
                               selectizeInput("changeAvatar", "Change Icon:",
                                              choices = c(
                                                # "Traveler" = "traveler",  # not compatible with new FA
@@ -302,83 +306,67 @@ shinyUI(
                               )
                             ),
                           fluidRow(
-                            div(class="panel panel-default",
-                                div(class="panel-body",
-                                    width = "600px",
-                                    tags$div(class = "wrap",
-                                             div(class = "left", 
-                                                 style="display: inline-block;vertical-align:top; width: 150px;",
-                                                 uiOutput("stepNo")
-                                                 ),
-                                             div(class = "right",
-                                                 style="display: inline-block;vertical-align:top; width: 150px;",
-                                                 introBox(checkboxInput('returnpdf', 'Save as PDF?', FALSE),
-                                                          data.step = 5, data.intro = "Stay on track with your plans by downloading your path."
-                                                          ),
-                                                 uiOutput("download")
-                                                 ),
-                                             div(class = "center",
-                                                 style="display: inline-block;vertical-align:top; width: 150px;",
-                                                 introBox(
-                                                   actionButton("goBack",
-                                                                label = "Back", 
-                                                                icon = icon("arrow-circle-left", class = "fa-2x"),
-                                                                width= "100px", height= "40px"),
-                                                                data.step = 3,
-                                                                data.intro = "Go back a step to edit your selection anytime."
-                                                   )
-                                                 ),
-                                                                # div(style="display: inline-block;vertical-align:top; width: 150px;",
-                                                                #     uiOutput("clearBtns")
-                                                                # ),
-                                                                # actionButton("resetBtn", "Reset All", icon = icon("refresh", class = "fa-2x")),    
-                                                                div(class = "center",
-                                                                    style="display: inline-block;vertical-align:top; width: 150px;",
-                                                                    introBox(
-                                                                        actionButton("btn1", 
-                                                                                     label = "Add", 
-                                                                                     icon = icon("arrow-circle-right", class = "fa-2x"),
-                                                                                     width= "100px", height= "40px"),
-                                                                        data.step = 2,
-                                                                        data.intro = "Confirm your selection by clicking here."
-                                                                    )
-                                                                )
-                                                       ),
-                                                       # Insert Table Output
-                                                       introBox(
-                                                           uiOutput("btns"),
-                                                           data.step = 1, 
-                                                           data.intro = "Start by selecting your first career choice from our list of over 2,000 current job classifications."
+                              div(class="panel panel-default",
+                                  div(class="panel-body",
+                                      width = "600px",
+                                      tags$div(class = "wrap",
+                                               div(class = "left",
+                                                   style="display: inline-block;vertical-align:top; width: 150px;",
+                                                   uiOutput("stepNo")
+                                                   ),
+                                               div(class = "right",
+                                                   style="display: inline-block;vertical-align:top; width: 150px;",
+                                                   introBox(checkboxInput('returnpdf', 'Save as PDF?', FALSE),
+                                                            data.step = 5, data.intro = "Stay on track with your plans by downloading your path."
+                                                            ),
+                                                   uiOutput("download")
+                                                   ),
+                                               div(class = "center",
+                                                   style="display: inline-block;vertical-align:top; width: 150px;",
+                                                   introBox(
+                                                       actionButton("goBack",
+                                                                    label = "Back", 
+                                                                    icon = icon("arrow-circle-left", class = "fa-2x"),
+                                                                    width= "100px", height= "40px"),
+                                                                    data.step = 3,
+                                                                    data.intro = "Go back a step to edit your selection anytime."
+                                                       )
+                                                   ),
+                                               # div(style="display: inline-block;vertical-align:top; width: 150px;",
+                                               #     uiOutput("clearBtns")
+                                               #    ),
+                                               # actionButton("resetBtn", "Reset All", icon = icon("refresh", class = "fa-2x")),
+                                               div(class = "center",
+                                                   style="display: inline-block;vertical-align:top; width: 150px;",
+                                                   introBox(
+                                                       actionButton("btn1",
+                                                                    label = "Add", 
+                                                                    icon = icon("arrow-circle-right", class = "fa-2x"),
+                                                                    width= "100px", height= "40px"),
+                                                       data.step = 2,
+                                                       data.intro = "Confirm your selection by clicking here."
                                                        )
                                                    )
                                                ),
-                                               plotOutput("myplot")
-                                           )
-                                )  # Closes the mainPanel
-                            )  # Closes the sidebarLayout
-                   ),  # Closes the second tabPanel called "Career PathFinder"
-    navbarMenu(
-      "PROGRAMS",
-      tabPanel(
-        "Higher Education",
-        fluidPage(title="Higher Education Program Outcomes",
-                  theme = theme
-        ),
-        mainPanel(
-          p("")
-        )
-      ),
-      tabPanel(
-        "Workforce Training",
-        fluidPage(title="Workforce Training Program Outcomes",
-                  theme = theme
-        ),
-        mainPanel(
-          p("")
-        )
-      )
+                                      selectizeInput("item_name",
+                                                     label = "",
+                                                     choices = NULL,
+                                                     selected = NULL,
+                                                     width = "100%"
+                                                     ),
+                                      div(
+                                          introBox(
+                                              uiOutput("btns"),
+                                              data.step = 1,
+                                              data.intro = "Start by selecting your first choice from our list of Arkansas Postsecondary and Workforce Training programs."
+                                              )
+                                          )
+                                      )
+                                  ),
+                              plotOutput("myplot")
+                              )
+                          )  # Closes the mainPanel
+               )  # Closes the sidebarLayout
+             )  # Closes the second tabPanel called "Career PathFinder"
     )
-                
-        
-                   )
   )

@@ -22,7 +22,6 @@ edges <- data.frame(from = numeric(), to = numeric(), length = numeric())
 # Load all datasets
 load("./data/item_pairs_30.rda")  # Load data  - old files end in rds, e.g., "item_pairs.rds"
 load("./data/item_pairs_15.rda")
-# load("./data/item_ref.rds")  
 load("./data/item_ref_30.rda")
 item_ref <- item_ref_30; rm(item_ref_30)
 
@@ -31,9 +30,6 @@ source("./www/make_breaks.R")
 
 shinyServer(function(input, output, session) {
     
-  session$onSessionEnded(function() {
-    stopApp()
-   })
     # Navbar ------------------------------------------------------------------
     shinyjs::addClass(id = "navBar", class = "navbar-right")
     
@@ -50,11 +46,13 @@ shinyServer(function(input, output, session) {
     )
     
     # Select dataset -----------------------------------------------------------
-    item_pairs <- reactive({
-        switch(input$selectData,
-               "30 Years" = item_pairs_30,
-               "15 Years" = item_pairs_15)
-    })
+   # item_pairs <- reactive({
+    #    switch(input$selectData,
+    #           "30 Years" = item_pairs_30,
+    #           "15 Years" = item_pairs_15)
+    #})
+    
+    item_pairs <- item_pairs_30
     
     # Initialize a variable to count how many times "btn1" is clicked.
     values <- reactiveValues(data = 1) 
@@ -74,7 +72,7 @@ shinyServer(function(input, output, session) {
     
     # Go Back Button -----------------------------------------------------------
     
-    observeEvent( input$goBack, {
+    observeEvent(input$goBack, {
         
         if (values$data <= 5) {
             enable("btn1")
@@ -111,7 +109,7 @@ shinyServer(function(input, output, session) {
     
     # Disable btn1 when step 5 is reached
     useShinyjs()
-    observeEvent( input$btn1, {
+    observeEvent(input$btn1, {
         if( values$data == 5 )
             shinyjs::disable("btn1")
     })
@@ -127,15 +125,16 @@ shinyServer(function(input, output, session) {
     
     # Show/Hide Settings -----------------------------------------------------------------
     # Hide settings at start of new Shiny session
-    observe(c(hide("selectData"),
-              hide("changeAvatar"),
-              hide("userName"),
-              hide("download")
+    observe(c(
+       # hide("selectData"),
+        hide("changeAvatar"),
+        hide("userName"),
+        hide("download")
     ))
     
     # Toggle visibility of settings
     observeEvent(input$settings, {
-        shinyjs::toggle("selectData", anim = TRUE)  # toggle is a shinyjs function
+       # shinyjs::toggle("selectData", anim = TRUE)  # toggle is a shinyjs function
         shinyjs::toggle("changeAvatar", anim = TRUE)
         shinyjs::toggle("userName", anim = TRUE)
     })
@@ -189,13 +188,15 @@ shinyServer(function(input, output, session) {
     
     # Select Input (First Job) -------------------------------------------------
     output$select1 <- renderUI({
-        selectizeInput("item_name", label = "",
-                       choices = item_ref$TitleLong,
-                       width = "100%",
-                       options = list(
-                           placeholder = 'Start your path by choosing from one of our jobs.',
-                           onInitialize = I('function() { this.setValue(""); }'))
-        )
+        updateSelectizeInput(session,
+                             "item_name", 
+                             label = "",
+                             choices = item_ref$TitleLong, 
+                             selected = NULL,
+                             options = list(
+                                 placeholder = 'Start your path by choosing from one of our education and workforce training programs.',
+                                 onInitialize = I('function() { this.setValue(""); }'))
+                             )
     })
     
     # Table Inputs (Next 2-5 Selections) ---------------------------------------
@@ -204,26 +205,26 @@ shinyServer(function(input, output, session) {
     # eventReactive( input$item_name,
     top1 <- reactive({
         
-        top <- dplyr::filter(item_pairs(), Item1Name == input$item_name) %>%
-            select(Item2Name, Item2, Prob, Salary2Min, SalaryDiff, Incumbents, Hyperlink)
+        top <- dplyr::filter(item_pairs, Item1Name == input$item_name) %>%
+            select(Item2Name, Prob, Salary2Min, SalaryDiff, Incumbents)
     })
     
     output$select2 <- DT::renderDataTable({
-        datatable( top1(), escape = FALSE,
+        datatable(top1(), escape = FALSE,
                    extensions = 'Responsive',
                    selection = list(mode = 'single', target = 'row'),
-                   colnames = c("Title", "Job Code", "Popularity %", "Starting Salary", "Max Salary Difference", "Incumbents", "Job Description"),
+                   colnames = c("Title", "Popularity %", "Starting Salary", "Max Salary Difference", "Total Served"),
                    rownames = FALSE, style = "bootstrap", 
                    callback = JS("
-                                 var tips = ['Classification Title', 'Title Code', 'Percent of employees that moved into that job from your last selected job',
-                                 'Starting salary', 'Difference between the highest possible salaries for the selected jobs',
-                                 'Number of employees currently holding the title', 'Link to requirements and description'],
+                                 var tips = ['Program Name', 'Percent of participants that moved into that program from your last selected program',
+                                 'Starting salary', 'Difference between the highest possible salaries for the selected programs',
+                                 'Number of participants that have entered the program'],
                                  header = table.columns().header();
                                  for (var i = 0; i < tips.length; i++) {
                                  $(header[i]).attr('title', tips[i]);
                                  }
                                  ")
-                   ) %>%
+        ) %>%
             formatCurrency('SalaryDiff') %>% 
             formatPercentage('Prob', 1) %>%
             formatCurrency("Salary2Min")
@@ -244,27 +245,27 @@ shinyServer(function(input, output, session) {
         
         itemName <- top1()[ input$select2_rows_selected,  "Item2Name"]
         
-        top <- dplyr::filter(item_pairs(), Item1Name == itemName) %>%
-            select(Item2Name, Item2, Prob, Salary2Min, SalaryDiff, Incumbents, Hyperlink)
+        top <- dplyr::filter(item_pairs, Item1Name == itemName) %>%
+            select(Item2Name, Prob, Salary2Min, SalaryDiff, Incumbents)
         top
     })
     
     output$select3 <- DT::renderDataTable({
-        datatable( top2(), escape = FALSE, 
+        datatable(top2(), escape = FALSE, 
                    extensions = 'Responsive',
                    selection = list(mode = 'single', target = 'row'),
-                   colnames = c("Title", "Job Code", "Popularity %", "Starting Salary", "Max Salary Difference", "Incumbents", "Job Description"),
+                   colnames = c("Title", "Popularity %", "Starting Salary", "Max Salary Difference", "Total Participants"),
                    rownames = FALSE, style = "bootstrap", 
                    callback = JS("
-                                 var tips = ['Classification Title', 'Title Code', 'Percent of employees that moved into that job from your last selected job',
-                                 'Starting salary', 'Difference between the highest possible salaries for the selected jobs',
-                                 'Number of employees currently holding the title', 'Link to requirements and description'],
+                                 var tips = ['Program Name', 'Percent of participants that moved into that program from your last selected program',
+                                 'Starting salary', 'Difference between the highest possible salaries for the selected programs',
+                                 'Number of participants that have entered the program'],
                                  header = table.columns().header();
                                  for (var i = 0; i < tips.length; i++) {
                                  $(header[i]).attr('title', tips[i]);
                                  }
                                  ")
-                   ) %>%
+        ) %>%
             formatCurrency('SalaryDiff') %>% 
             formatPercentage('Prob', 1) %>%
             formatCurrency("Salary2Min")
@@ -284,27 +285,27 @@ shinyServer(function(input, output, session) {
         
         itemName <- top2()[ input$select3_rows_selected,  "Item2Name"]
         
-        top <- dplyr::filter(item_pairs(), Item1Name == itemName) %>%
-            select(Item2Name, Item2, Prob, Salary2Min, SalaryDiff, Incumbents, Hyperlink)
+        top <- dplyr::filter(item_pairs, Item1Name == itemName) %>%
+            select(Item2Name, Prob, Salary2Min, SalaryDiff, Incumbents)
         top
     })
     
     output$select4 <- DT::renderDataTable({
-        datatable( top3(), escape = FALSE, 
+        datatable(top3(), escape = FALSE, 
                    extensions = 'Responsive',
                    selection = list(mode = 'single', target = 'row'),
-                   colnames = c("Title", "Job Code", "Popularity %", "Starting Salary", "Max Salary Difference", "Incumbents", "Job Description"),
+                   colnames = c("Title", "Popularity %", "Starting Salary", "Max Salary Difference", "Total Participants"),
                    rownames = FALSE, style = "bootstrap", 
                    callback = JS("
-                                 var tips = ['Classification Title', 'Title Code', 'Percent of employees that moved into that job from your last selected job',
-                                 'Starting salary', 'Difference between the highest possible salaries for the selected jobs',
-                                 'Number of employees currently holding the title', 'Link to requirements and description'],
+                                 var tips = ['Program Name', 'Percent of participants that moved into that program from your last selected program',
+                                 'Starting salary', 'Difference between the highest possible salaries for the selected programs',
+                                 'Number of participants that have entered the program'],
                                  header = table.columns().header();
                                  for (var i = 0; i < tips.length; i++) {
                                  $(header[i]).attr('title', tips[i]);
                                  }
                                  ")
-                   ) %>%
+        ) %>%
             formatCurrency('SalaryDiff') %>% 
             formatPercentage('Prob', 1) %>%
             formatCurrency("Salary2Min")
@@ -324,27 +325,27 @@ shinyServer(function(input, output, session) {
         
         itemName <- top3()[ input$select4_rows_selected,  "Item2Name"]
         
-        top <- dplyr::filter(item_pairs(), Item1Name == itemName) %>%
-            select(Item2Name, Item2, Prob, Salary2Min, SalaryDiff, Incumbents, Hyperlink)
+        top <- dplyr::filter(item_pairs, Item1Name == itemName) %>%
+            select(Item2Name, Prob, Salary2Min, SalaryDiff, Incumbents)
         top
     })
     
     output$select5 <- DT::renderDataTable({
-        datatable( top4(), escape = FALSE, 
+        datatable(top4(), escape = FALSE, 
                    extensions = 'Responsive',
                    selection = list(mode = 'single', target = 'row'),
-                   colnames = c("Title", "Job Code", "Popularity %", "Starting Salary", "Max Salary Difference", "Incumbents", "Job Description"),
+                   colnames = c("Title", "Popularity %", "Starting Salary", "Max Salary Difference", "Total Participants"),
                    rownames = FALSE, style = "bootstrap", 
                    callback = JS("
-                                 var tips = ['Classification Title', 'Title Code', 'Percent of employees that moved into that job from your last selected job',
-                                 'Starting salary', 'Difference between the highest possible salaries for the selected jobs',
-                                 'Number of employees currently holding the title', 'Link to requirements and description'],
+                                 var tips = ['Program Name', 'Percent of participants that moved into that program from your last selected program',
+                                 'Starting salary', 'Difference between the highest possible salaries for the selected programs',
+                                 'Number of participants that have entered the program'],
                                  header = table.columns().header();
                                  for (var i = 0; i < tips.length; i++) {
                                  $(header[i]).attr('title', tips[i]);
                                  }
                                  ")
-                   ) %>%
+        ) %>%
             formatCurrency('SalaryDiff') %>% 
             formatPercentage('Prob', 1) %>%
             formatCurrency("Salary2Min")
@@ -363,32 +364,36 @@ shinyServer(function(input, output, session) {
     plotTitle <- reactive({
         
         if(input$userName == "") {
-            paste("Your Career Path")
+            paste("Your Arkansas Pathway")
         } else {
-            paste(input$userName, "'s Career Path", sep = "")
+            paste(input$userName, "'s Arkansas Pathway", sep = "")
         }
         
     })
     
     
     output$displayName <- renderUI({
-        tags$h4( plotTitle() )
+        tags$h4(plotTitle() )
         
     })
     
     # Show the current step -------------------
     output$stepNo <- renderUI({
         if(values$data == 1) {
-            tags$h4("Step 1:")
+           # tags$h4("Step 1:")
+            div(tags$h4("Step 1:"), div(tags$h6("Choose from one of our education and workforce programs in the table below")))
         } else if (values$data == 2) {
             # tags$h4("Step 2:")
-            div(tags$h4("Step 2:"), div(tags$h6("Choose from one of the jobs in the table below")))
+            div(tags$h4("Step 2:"), div(tags$h6("Choose from one of our education and workforce programs in the table below")))
         } else if (values$data == 3) {
-            tags$h4("Step 3:")
+           # tags$h4("Step 3:")
+            div(tags$h4("Step 3:"), div(tags$h6("Choose from one of our education and workforce programs in the table below")))
         } else if (values$data == 4) {
-            tags$h4("Step 4:")
+           # tags$h4("Step 4:")
+            div(tags$h4("Step 4:"), div(tags$h6("Choose from one of our education and workforce programs in the table below")))
         } else if (values$data >= 5) {
-            tags$h4("Step 5:")
+           # tags$h4("Step 5:")
+            div(tags$h4("Step 5:"), div(tags$h6("Choose from one of our education and workforce programs in the table below")))
         }
         
     })
@@ -422,9 +427,8 @@ shinyServer(function(input, output, session) {
         } else {
             div(class="panel panel-default",
                 div(class="panel-body",
-                    div(tags$img(src = "one.svg", width = "25px", height = "25px"), tags$h6( paste0(input$item_name, " (", job_1_data()[2], ")") ),
-                        paste0( job_1_data()[3], " - ", job_1_data()[4], " /month"), 
-                        div(paste0(job_1_data()[5], " incumbents"))
+                    div(tags$img(src = "one.svg", width = "25px", height = "25px"), 
+                        tags$h6( paste0(input$item_name))
                     )
                 ))
         }
@@ -433,9 +437,7 @@ shinyServer(function(input, output, session) {
     # Create label for output report
     label_1 <- reactive({
         
-        lab <- paste0( input$item_name, "\n",
-                       job_1_data()[3], " - ", job_1_data()[4], " Monthly",
-                       " | ", job_1_data()[5], " Incumbents")
+        lab <- paste0( input$item_name, "\n")
         
         lab
     })
@@ -470,9 +472,8 @@ shinyServer(function(input, output, session) {
         } else {
             div(class="panel panel-default",
                 div(class="panel-body",
-                    div(tags$img(src = "two.svg", width = "25px", height = "25px"), tags$h6( paste0(job_2_data()[1], " (", job_2_data()[2], ")") ),
-                        paste0( job_2_data()[3], " - ", job_2_data()[4], " /month"), 
-                        div(paste0(job_2_data()[5], " incumbents"))
+                    div(tags$img(src = "two.svg", width = "25px", height = "25px"), 
+                        tags$h6(paste0(job_2_data()[1]))
                     )
                 ))
         }
@@ -481,9 +482,7 @@ shinyServer(function(input, output, session) {
     label_2 <- reactive({
         
         try(
-            paste0( job_2_data()[1], "\n",
-                    job_2_data()[3], " - ", job_2_data()[4], " Monthly", "\n",
-                    job_2_data()[6], " Popularity", " | ", job_2_data()[5], " Incumbents"),
+            paste0( job_2_data()[1], "\n"),
             
             TRUE
         )
@@ -520,9 +519,8 @@ shinyServer(function(input, output, session) {
         } else {
             div(class="panel panel-default",
                 div(class="panel-body",
-                    div(tags$img(src = "three.svg", width = "25px", height = "25px"), tags$h6( paste0(job_3_data()[1], " (", job_3_data()[2], ")") ),
-                        paste0( job_3_data()[3], " - ", job_3_data()[4], " /month"), 
-                        div(paste0(job_3_data()[5], " incumbents"))
+                    div(tags$img(src = "three.svg", width = "25px", height = "25px"),
+                        tags$h6(paste0(job_3_data()[1]))
                     )
                 ))
         }
@@ -531,9 +529,7 @@ shinyServer(function(input, output, session) {
     label_3 <- reactive({
         
         try(
-            paste0( job_3_data()[1], "\n",
-                    job_3_data()[3], " - ", job_3_data()[4], " Monthly", "\n",
-                    job_3_data()[6], " Popularity", " | ", job_3_data()[5], " Incumbents"),
+            paste0( job_3_data()[1], "\n"),
             TRUE
         )
         
@@ -569,9 +565,8 @@ shinyServer(function(input, output, session) {
         } else {
             div(class="panel panel-default",
                 div(class="panel-body",
-                    div(tags$img(src = "four.svg", width = "25px", height = "25px"), tags$h6( paste0(job_4_data()[1], " (", job_4_data()[2], ")") ),
-                        paste0( job_4_data()[3], " - ", job_4_data()[4], " /month"), 
-                        div(paste0(job_4_data()[5], " incumbents"))
+                    div(tags$img(src = "four.svg", width = "25px", height = "25px"),
+                        tags$h6(paste0(job_4_data()[1]))
                     )
                 ))
         }
@@ -579,9 +574,7 @@ shinyServer(function(input, output, session) {
     
     label_4 <- reactive({
         try(
-            paste0( job_4_data()[1], "\n",
-                    job_4_data()[3], " - ", job_4_data()[4], " Monthly", "\n",
-                    job_4_data()[6], " Popularity", " | ", job_4_data()[5], " Incumbents"),
+            paste0( job_4_data()[1], "\n"),
             TRUE
         )
         
@@ -617,9 +610,8 @@ shinyServer(function(input, output, session) {
         } else {
             div(class="panel panel-default",
                 div(class="panel-body",
-                    div(tags$img(src = "five.svg", width = "25px", height = "25px"), tags$h6( paste0(job_5_data()[1], " (", job_5_data()[2], ")") ),
-                        paste0( job_5_data()[3], " - ", job_5_data()[4], " /month"), 
-                        div(paste0(job_5_data()[5], " incumbents"))
+                    div(tags$img(src = "five.svg", width = "25px", height = "25px"),
+                        tags$h6(paste0(job_5_data()[1]))
                     )
                 ))
         }
@@ -628,9 +620,7 @@ shinyServer(function(input, output, session) {
     label_5 <- reactive({
         
         try(
-            paste0( job_5_data()[1], "\n",
-                    job_5_data()[3], " - ", job_5_data()[4], " Monthly", "\n",
-                    job_5_data()[6], " Popularity", " | ", job_5_data()[5], " Incumbents"),
+            paste0( job_5_data()[1], "\n"),
             TRUE
         )
     })
@@ -748,8 +738,7 @@ shinyServer(function(input, output, session) {
         } else if ( nrow(visNode()) == 5 ) {
             5432
         }
-    })
-    
+    })    
     # Creating the dynamic graph
     output$visTest <- visNetwork::renderVisNetwork({
         
@@ -761,7 +750,9 @@ shinyServer(function(input, output, session) {
                                  arrows = list(to = list(enabled = TRUE, scaleFactor = 2)),
                                  color = list(color = "#587fb4", highlight = "red")) %>%
             visNodes(shadow = list(enabled = TRUE, size = 15),
-                     icon = list( color = colorIcon() )) %>%
+                     icon = list( color = colorIcon() ),
+                     fixed = TRUE,
+                     physics = TRUE) %>%
             visLayout(randomSeed = visSeed() ) %>%
             visPhysics(solver = "barnesHut", stabilization = list(enabled = FALSE))
     })
@@ -843,7 +834,7 @@ shinyServer(function(input, output, session) {
             plot(cars, type = "n", axes = F, xlab = "", ylab = "")
             lim <- par()
             
-            rasterImage( template(), lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4] )
+            rasterImage(template(), lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4])
             
             plot_labels()
             
@@ -896,17 +887,17 @@ shinyServer(function(input, output, session) {
     onclick("download",
             delay(5000, 
                   c(
-                      showModal(
-                          modalDialog(
-                              title = "Tell us what you think!",
-                              "We want to hear your thoughts on this career planning tool. Please take this 2 minute survey and your feedback will enhance this resource for years to come!", 
-                              tags$a(href="https://survey.lacounty.gov/LACounty/se.ashx?s=645F266E52CB09F0", 
-                                     target = "_blank", 
-                                     "Click here for the survey"), 
-                              size = "m", 
-                              footer = modalButton(label = " ", icon = icon("close") )
-                          )
-                      ),
+                     # showModal(
+                     #     modalDialog(
+                     #         title = "Tell us what you think!",
+                     #         "We want to hear your thoughts on this career planning tool. Please take this 2 minute survey and your feedback will enhance this resource for years to come!", 
+                     #         tags$a(href="https://survey.lacounty.gov/LACounty/se.ashx?s=645F266E52CB09F0", 
+                     #                target = "_blank", 
+                     #                "Click here for the survey"), 
+                     #         size = "m", 
+                     #         footer = modalButton(label = " ", icon = icon("close") )
+                     #     )
+                     # ),
                       delay(1000, shinyjs::reset("returnpdf") )
                   )
             )
